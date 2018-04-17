@@ -5,7 +5,7 @@ import conf
 import values
 
 
-def createAE():
+def createAE(acpi=None):
     req_message = {}
     req_message['m2m:rqp'] = {}
     req_message['m2m:rqp']['op'] = 1  # create
@@ -18,6 +18,8 @@ def createAE():
     req_message['m2m:rqp']['pc']['m2m:ae']['rn'] = conf.ae.name
     req_message['m2m:rqp']['pc']['m2m:ae']['api'] = conf.ae.appid
     req_message['m2m:rqp']['pc']['m2m:ae']['rr'] = True
+    if acpi != None:
+        req_message['m2m:rqp']['pc']['m2m:ae']['acpi'] = [acpi]
 
     values.mqttc.publish(values.req_topic, json.dumps(req_message['m2m:rqp']))
     print(values.req_topic + ' (json) ' + json.dumps(req_message['m2m:rqp']) + ' ---->', end='\n\n')
@@ -178,12 +180,51 @@ def deleteSUB(count):
 
 
 # TODO: Add acp method
-def createACP():
-    pass
+def createACP(count):
+    req_message = {}
+    req_message['m2m:rqp'] = {}
+    req_message['m2m:rqp']['op'] = 1
+    req_message['m2m:rqp']['to'] = '/' + conf.cse.id
+    req_message['m2m:rqp']['fr'] = conf.ae.id
+    req_message['m2m:rqp']['rqi'] = shortid.generate()
+    req_message['m2m:rqp']['ty'] = 1  #acp
+    req_message['m2m:rqp']['pc'] = {}
+    req_message['m2m:rqp']['pc']['m2m:acp'] = {}
+    req_message['m2m:rqp']['pc']['m2m:acp']['rn'] = conf.acp[count]['name']
+    req_message['m2m:rqp']['pc']['m2m:acp']['pv'] = {}
+    req_message['m2m:rqp']['pc']['m2m:acp']['pv']['acr'] = [{
+        'acor': conf.acp[count]['target'],
+        'acop': conf.acp[count]['policy']
+    }]
+    # req_message['m2m:rqp']['pc']['m2m:acp']['pv']['acr']['acor'] = conf.acp[count]['target']
+    # req_message['m2m:rqp']['pc']['m2m:acp']['pv']['acr']['acop'] = conf.acp[count]['policy']
+    req_message['m2m:rqp']['pc']['m2m:acp']['pvs'] = {}
+    req_message['m2m:rqp']['pc']['m2m:acp']['pvs']['acr'] = [{
+        'acor': conf.acp[count]['selfTarget'],
+        'acop': conf.acp[count]['selfPolicy']
+    }]
+    # req_message['m2m:rqp']['pc']['m2m:acp']['pvs']['acr']['acor'] = conf.acp[count]['selfTarget']
+    # req_message['m2m:rqp']['pc']['m2m:acp']['pvs']['acr']['acop'] = conf.acp[count]['selfPolicy']
+
+    values.mqttc.publish(values.req_topic, json.dumps(req_message['m2m:rqp']))
+    print(values.req_topic + ' (json) ' + json.dumps(req_message['m2m:rqp']) + ' ---->', end='\n\n')
+
+    return req_message['m2m:rqp']['rqi']
 
 
-def retrieveACP():
-    pass
+def retrieveACP(count):
+    req_message = {}
+    req_message['m2m:rqp'] = {}
+    req_message['m2m:rqp']['op'] = 2  # retrieve
+    req_message['m2m:rqp']['to'] = conf.acp[count]['location']
+    req_message['m2m:rqp']['fr'] = conf.ae.id
+    req_message['m2m:rqp']['rqi'] = shortid.generate()
+    req_message['m2m:rqp']['pc'] = {}
+
+    values.mqttc.publish(values.req_topic, json.dumps(req_message['m2m:rqp']))
+    print(values.req_topic + ' (json) ' + json.dumps(req_message['m2m:rqp']) + ' ---->', end='\n\n')
+
+    return req_message['m2m:rqp']['rqi']
 
 
 def updateACP():
